@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -8,7 +8,8 @@
   <style>
     :root {
       --accent: #00ffe0;
-      --bg: #0f0f0f;
+      --accent2: #ff00c8;
+      --bg: #050505;
       --glass: rgba(255, 255, 255, 0.05);
     }
 
@@ -25,72 +26,98 @@
       overflow-x: hidden;
     }
 
+    /* === STARFIELD BACKGROUND === */
+    canvas#stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
     header {
       text-align: center;
-      padding: 6rem 2rem 3rem;
+      padding: 8rem 2rem 4rem;
+      perspective: 1000px;
     }
 
     header h1 {
-      font-size: 4rem;
+      font-size: 5rem;
       font-weight: 900;
-      background: linear-gradient(90deg, var(--accent), #ff00c8);
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      animation: glow 2s infinite alternate;
-    }
-
-    @keyframes glow {
-      from { text-shadow: 0 0 10px var(--accent); }
-      to { text-shadow: 0 0 30px #ff00c8; }
+      text-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent2);
+      transform-style: preserve-3d;
     }
 
     header p {
       font-size: 1.5rem;
       color: #aaa;
       max-width: 700px;
-      margin: 1rem auto 0;
+      margin: 1.5rem auto 0;
     }
 
+    /* === SECTIONS === */
     .section {
       max-width: 900px;
-      margin: 4rem auto;
-      padding: 2rem;
+      margin: 6rem auto;
+      padding: 2.5rem;
       background: var(--glass);
-      border-radius: 16px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 40px rgba(0, 255, 200, 0.1);
+      border-radius: 20px;
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(0,255,255,0.2);
+      box-shadow: 0 0 50px rgba(0, 255, 200, 0.1);
       opacity: 0;
-      transform: translateY(50px);
+      transform: translateY(80px) scale(0.95);
+      transition: transform 0.3s ease;
+    }
+
+    .section:hover {
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 0 60px rgba(0, 255, 200, 0.3);
     }
 
     .section h2 {
-      font-size: 2rem;
+      font-size: 2.2rem;
       margin-bottom: 1rem;
       color: var(--accent);
+      text-shadow: 0 0 15px var(--accent);
+      letter-spacing: 1px;
     }
 
     .section p {
       font-size: 1.2rem;
-      line-height: 1.8;
+      line-height: 1.9;
       color: #ddd;
+    }
+
+    /* === TIMELINE EFFECT === */
+    .section::before {
+      content: "";
+      position: absolute;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2));
+      left: -40px;
+      top: 0;
+      border-radius: 10px;
     }
 
     footer {
       text-align: center;
-      margin: 4rem 2rem;
+      margin: 5rem 2rem;
       font-size: 0.9rem;
-      color: #666;
+      color: #888;
     }
 
     @media (max-width: 600px) {
       header h1 {
-        font-size: 2.5rem;
+        font-size: 3rem;
       }
-
       header p, .section p {
         font-size: 1rem;
       }
-
       .section {
         margin: 2rem 1rem;
       }
@@ -99,9 +126,11 @@
 </head>
 <body>
 
+  <canvas id="stars"></canvas>
+
   <header>
-    <h1>Rudi</h1>
-    <p>The digital samurai. Forged in Raipur. Sharpened in Varanasi. Unleashed at SRM. This is not a portfolio. This is a legacy in motion.</p>
+    <h1 id="glitch-text">Rudi</h1>
+    <p id="typing-text"></p>
   </header>
 
   <div class="section">
@@ -147,26 +176,89 @@
     &copy; 2025 Rudi. Engineered to impress. Designed to endure.
   </footer>
 
+  <!-- GSAP -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  
   <script>
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Animate sections on scroll
     gsap.utils.toArray(".section").forEach((section, i) => {
       gsap.to(section, {
         scrollTrigger: {
           trigger: section,
-          start: "top 80%",
+          start: "top 85%",
           toggleActions: "play none none none"
         },
         opacity: 1,
         y: 0,
-        duration: 1,
-        delay: i * 0.2
+        scale: 1,
+        duration: 1.2,
+        ease: "power3.out",
+        delay: i * 0.15
       });
     });
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
-  <script>
-    gsap.registerPlugin(ScrollTrigger);
-  </script>
 
+    // Typing Effect
+    const text = "The digital samurai. Forged in Raipur. Sharpened in Varanasi. Unleashed at SRM. This is not a portfolio. This is a legacy in motion.";
+    let index = 0;
+    function type() {
+      if (index < text.length) {
+        document.getElementById("typing-text").innerHTML += text.charAt(index);
+        index++;
+        setTimeout(type, 40);
+      }
+    }
+    type();
+
+    // Starfield background
+    const canvas = document.getElementById("stars");
+    const ctx = canvas.getContext("2d");
+    let stars = [];
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    for (let i = 0; i < 300; i++) {
+      stars.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 1.2,
+        speed: Math.random() * 0.3
+      });
+    }
+
+    function drawStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "#fff";
+      stars.forEach(star => {
+        ctx.beginPath();
+        ctx.arc(star.x, star.y, star.radius, 0, 2 * Math.PI);
+        ctx.fill();
+      });
+    }
+
+    function moveStars() {
+      stars.forEach(star => {
+        star.y += star.speed;
+        if (star.y > canvas.height) {
+          star.y = 0;
+          star.x = Math.random() * canvas.width;
+        }
+      });
+    }
+
+    function animateStars() {
+      drawStars();
+      moveStars();
+      requestAnimationFrame(animateStars);
+    }
+    animateStars();
+
+    window.addEventListener("resize", () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    });
+  </script>
 </body>
 </html>
